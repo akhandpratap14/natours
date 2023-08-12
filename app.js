@@ -12,7 +12,8 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const path = require('path');
-
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const app = express(); 
 
 app.set('view engine', 'pug');
@@ -24,8 +25,24 @@ app.set('views', path.join(__dirname, 'views'));
 // app.use(express.static(`${__dirname}/public`));
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(
+    cors({
+      origin: 'http://localhost:5000',
+      credentials: true,
+    })
+);
+
 // Set Security HTTP headers
-app.use(helmet());
+app.use(helmet.contentSecurityPolicy({
+    directives: {
+        defaultSrc: ["'self'", 'https:', 'http:', 'data:', 'ws:'],
+        baseUri: ["'self'"],
+        fontSrc: ["'self'", 'https:', 'http:', 'data:'],
+        scriptSrc: ["'self'", 'https:', 'http:', 'blob:'],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https:', 'http:'],
+    },
+    })
+    );
 
 // Development Logging 
 if(process.env.NODE_ENV === 'development'){
@@ -43,6 +60,7 @@ app.use(limiter);
 
 // Body Parser, reading data from body into req.body
 app.use(express.json({ limit: '10kb' }));
+app.use(cookieParser());
 
 // Data sanitization against NoSQL query Injection
 app.use(mongoSanitize());
@@ -60,7 +78,7 @@ app.use(hpp({
 // Test Middleware
 app.use((req, res, next) => {
     req.requestTime = new Date().toISOString();
-    console.log(req.headers);
+    console.log(req.cookies);
     next();
 });
 
