@@ -23,7 +23,7 @@ exports.getTour = catchAsync( async (req, res, next) => {
         fields: 'review rating user'
     });
 
-    console.log('>>>>', tour.guides.length);
+    // console.log('>>>>', tour.guides.length);
 
     res.status(200).set(
         'Content-Security-Policy',

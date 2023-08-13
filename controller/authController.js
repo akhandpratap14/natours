@@ -73,13 +73,13 @@ exports.login = catchAsync( async (req, res, next) => {
 exports.isLoggedIn = catchAsync(async(req, res, next) => {
 
     if (req.cookies.jwt) {
-        token = req.cookies.jwt;
-
-    // 2. Verification token 
-    const decoded = await promisify(jwt.verify)(req.cookies.jwt, process.env.JWT_SECRET);
+        // 2. Verification token 
+        const decoded = await promisify(jwt.verify)(req.cookies.jwt, process.env.JWT_SECRET);
 
     // 3. Check if user still exists
     const freshUser = await User.findById(decoded.id);
+    console.log('fresherUser:::', freshUser);
+
     if(!freshUser){
         return next();
     }
@@ -90,8 +90,8 @@ exports.isLoggedIn = catchAsync(async(req, res, next) => {
     }
 
     // THERE IS ALOGGED IN USER
-    res.locals.user = freshUser
-    next();
+    res.locals.user = freshUser;
+    return next();
     }
     next();
 });
@@ -103,9 +103,10 @@ exports.protect = catchAsync(async(req, res, next) => {
     let token;
     if(req.headers.authorization && req.headers.authorization.startsWith('Bearer')){
         token = req.headers.authorization.split(' ')[1];
-        console.log("req.headers.authorizationreq.headers.authorization::", req.headers.authorization);
-        console.log("tokentokentoken::", token);
-    } else if (req.cookies.jwt) {
+        // console.log("req.headers.authorizationreq.headers.authorization::", req.headers.authorization);
+        // console.log("tokentokentoken::", token);
+    } 
+    else if (req.cookies.jwt) {
         token = req.cookies.jwt;
     }
 
@@ -152,11 +153,11 @@ exports.forgetPassword = catchAsync(async (req, res, next) => {
     const resetToken = user.createPasswordResetToken();
     await user.save({validateBeforeSave: false});
 
-    console.log("reserToken:::::>>>>", resetToken);
+    // console.log("reserToken:::::>>>>", resetToken);
 
     // 3. Send it to user's email
     const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
-    console.log("resetURL:::::>>>>", resetURL);
+    // console.log("resetURL:::::>>>>", resetURL);
 
     const message = `Forget your password? Submit a PATCH request with your new password and
     passwordConfirm to: ${resetURL}. \n If you didntforget your password, please ignore this email!`;
@@ -193,14 +194,14 @@ exports.resetPassword = catchAsync( async (req, res, next) => {
     // 1. Get user based on the token 
     const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
 
-    console.log(":::::", hashedToken);
+    // console.log(":::::", hashedToken);
 
     const user = await User.findOne({
         passwordResetToken: hashedToken,
         passwordResetExpires: {$gt: Date.now()}
     });
 
-    console.log(">>>>>>>", user);
+    // console.log(">>>>>>>", user);
 
     // 2. If token has not expired, and there is user, set the new password
     if(!user){
@@ -222,11 +223,11 @@ exports.resetPassword = catchAsync( async (req, res, next) => {
 
 exports.updatePasword = catchAsync( async (req, res, next) => {
 
-    console.log("<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>", req.body);
+    // console.log("<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>", req.body);
 
     // 1. Get user from the collection 
     const user = await User.findById(req.user.id).select('+password');
-    console.log("<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>",req.body);
+    // console.log("<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>",req.body);
     
     // 2. Check if posted password is correct 
     if (!(await user.correctPassword(req.body.passwordCurrent, user.password))){

@@ -165,8 +165,8 @@ next();
 });
 
 tourSchema.post(/^find/, function(doc, next){
-    console.log(`Query took ${Date.now() - this.start} milliseconds`);
-    console.log(doc);
+    // console.log(`Query took ${Date.now() - this.start} milliseconds`);
+    // console.log(doc);
     next();
 });
 
